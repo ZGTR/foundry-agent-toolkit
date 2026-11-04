@@ -1,12 +1,12 @@
 # Shared Agent Engineering Toolkit (Agent TDD Lab)
 
-[![CI](https://github.com/ZGTR/mshaker-shared-agent-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/ZGTR/mshaker-shared-agent-toolkit/actions/workflows/ci.yml)
+[![CI](https://github.com/ZGTR/foundry-agent-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/ZGTR/foundry-agent-toolkit/actions/workflows/ci.yml)
 
 A reusable CI/CD quality gate for agents, harnesses, tools, and multi-agent workflows. Keep your existing **LangGraph, Pi (badlogic/pi-mono), AWS Strands, or custom runtime**. Call this repository from your pipeline to run cases, apply release gates, and collect JSON/HTML/JUnit reports. The included Python agent runtime is optional.
 
 **Status:** production-oriented reference implementation with a tested local SQLite effect simulator. It does not send money, authenticate HTTP callers, guarantee model quality, or provide a distributed agent runtime. Read [production integration requirements](docs/production.md) before enabling external effects.
 
-**Renamed:** this repository was `ZGTR/agent-tdd-lab`. It is the same repository, with the same history and MIT license. The Python distribution `agent-tdd-lab`, the `agent_tdd` imports and the `agent-tdd` CLI are unchanged. Git and web URLs redirect, but GitHub does not redirect Action references, so update `uses: ZGTR/agent-tdd-lab@…` to `uses: ZGTR/mshaker-shared-agent-toolkit@…`.
+**Renamed:** this repository was `ZGTR/agent-tdd-lab`, then `ZGTR/mshaker-shared-agent-toolkit`. It is the same repository, with the same history and MIT license. The Python distribution `agent-tdd-lab`, the `agent_tdd` imports and the `agent-tdd` CLI are unchanged. Git and web URLs redirect, but GitHub does not redirect Action references, so change `uses: ZGTR/agent-tdd-lab@…` or `uses: ZGTR/mshaker-shared-agent-toolkit@…` to `uses: ZGTR/foundry-agent-toolkit@…`.
 
 | Capability | What is here | Evidence level |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ Add these steps **after your normal application checkout, runtime setup and lock
   with:
     python-version: '3.12'
 - name: Gate my existing agent system
-  uses: ZGTR/mshaker-shared-agent-toolkit@v1.3.0 # Pin the reviewed release's full commit SHA in protected pipelines.
+  uses: ZGTR/foundry-agent-toolkit@v1.3.0 # Pin the reviewed release's full commit SHA in protected pipelines.
   with:
     cases: evals/agent.json
     executor-config: ci/agent.json
@@ -115,8 +115,8 @@ The stock CLI uses exact code grading for structured outcomes and observed polic
 Python 3.11–3.13, Git, and a local writable filesystem are required. No AWS account, API key, Docker, or GPU is needed.
 
 ```bash
-git clone https://github.com/ZGTR/mshaker-shared-agent-toolkit.git
-cd mshaker-shared-agent-toolkit
+git clone https://github.com/ZGTR/foundry-agent-toolkit.git
+cd foundry-agent-toolkit
 python -m venv .venv
 . .venv/bin/activate                 # Windows: .venv\Scripts\activate
 python -m pip install --require-hashes -r requirements-dev.txt
