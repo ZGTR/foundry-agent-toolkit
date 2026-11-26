@@ -24,3 +24,5 @@ backend.s3.hcl
 artifacts/
 *.local.json
 .DS_Store
+.release-venv/
+.release-tools/
