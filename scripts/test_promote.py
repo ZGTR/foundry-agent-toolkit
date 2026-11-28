@@ -1,7 +1,9 @@
 """scripts/promote.sh against real throwaway repos: a bare origin plus clones.
 
-Run: python3 scripts/test_promote.py (or pytest). Every push, refusal and receipt is git's own behaviour.
+Run: python3 scripts/test_promote.py (or pytest).
+Every push, refusal and receipt is git's own behaviour.
 """
+
 import os
 import subprocess
 import tempfile
@@ -9,17 +11,31 @@ import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent / "promote.sh"
-ENV = {**os.environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
-       "GIT_COMMITTER_EMAIL": "t@t", "GIT_CONFIG_NOSYSTEM": "1"}
+ENV = {
+    **os.environ,
+    "GIT_AUTHOR_NAME": "t",
+    "GIT_AUTHOR_EMAIL": "t@t",
+    "GIT_COMMITTER_NAME": "t",
+    "GIT_COMMITTER_EMAIL": "t@t",
+    "GIT_CONFIG_NOSYSTEM": "1",
+}
 ENV.pop("PROMOTE_UNCHECKED", None)
 
 
 def git(cwd, *args):
-    return subprocess.run(["git", *args], cwd=cwd, env=ENV, capture_output=True, text=True, check=True).stdout.strip()
+    return subprocess.run(
+        ["git", *args], cwd=cwd, env=ENV, capture_output=True, text=True, check=True
+    ).stdout.strip()
 
 
 def promote(cwd, *args, **env):
-    return subprocess.run(["bash", str(SCRIPT), *args], cwd=cwd, env={**ENV, **env}, capture_output=True, text=True)
+    return subprocess.run(
+        ["bash", str(SCRIPT), *args],
+        cwd=cwd,
+        env={**ENV, **env},
+        capture_output=True,
+        text=True,
+    )
 
 
 class Promote(unittest.TestCase):
@@ -32,7 +48,14 @@ class Promote(unittest.TestCase):
         (self.a / "f.txt").write_text("one\n")
         git(self.a, "add", ".")
         git(self.a, "commit", "-q", "-m", "one")
-        git(self.a, "push", "-q", "origin", "HEAD:refs/heads/develop", "HEAD:refs/heads/main")
+        git(
+            self.a,
+            "push",
+            "-q",
+            "origin",
+            "HEAD:refs/heads/develop",
+            "HEAD:refs/heads/main",
+        )
         self.b = self.root / "b"
         git(self.root, "clone", "-q", str(self.origin), str(self.b))
         self.marker = self.root / "checks-ran"
@@ -73,8 +96,15 @@ class Promote(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertEqual(self.main(), sha)
         tree = git(self.a, "rev-parse", f"{sha}^{{tree}}")
-        git(self.a, "fetch", "-q", "origin", "+refs/heads/receipts:refs/remotes/origin/receipts")
-        self.assertIn("docs-only hotfix", git(self.a, "show", f"origin/receipts:release/{tree}.json"))
+        git(
+            self.a,
+            "fetch",
+            "-q",
+            "origin",
+            "+refs/heads/receipts:refs/remotes/origin/receipts",
+        )
+        receipt = git(self.a, "show", f"origin/receipts:release/{tree}.json")
+        self.assertIn("docs-only hotfix", receipt)
 
     def test_red_checks_block_and_record_nothing(self):
         before = self.main()
@@ -94,7 +124,8 @@ class Promote(unittest.TestCase):
         self.assertIn("receipt release/", r.stdout)
         r = promote(self.b, sha, "--apply")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertEqual(self.marker.read_text().count("ran"), 1, "the receipt was trusted, no second run")
+        ran = self.marker.read_text().count("ran")
+        self.assertEqual(ran, 1, "the receipt was trusted, no second run")
         self.assertEqual(self.main(), sha)
 
     def test_apply_runs_missing_checks_then_promotes(self):
@@ -103,7 +134,8 @@ class Promote(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertTrue(self.marker.exists())
         self.assertEqual(self.main(), sha)
-        self.assertEqual([p for p in self.root.iterdir() if p.name.startswith(".release-")], [], "worktree removed")
+        left = [p for p in self.root.iterdir() if p.name.startswith(".release-")]
+        self.assertEqual(left, [], "worktree removed")
 
     def test_refuses_a_commit_not_on_develop(self):
         git(self.a, "checkout", "-q", "-b", "side")

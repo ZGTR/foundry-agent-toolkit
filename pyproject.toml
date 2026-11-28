@@ -35,7 +35,6 @@ addopts = "--strict-markers --strict-config"
 line-length = 100
 target-version = "py311"
 # The land-once hook and promote test are kept byte-identical across repositories.
-extend-exclude = [".claude/hooks", "scripts/test_promote.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
