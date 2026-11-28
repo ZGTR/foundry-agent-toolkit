@@ -13,12 +13,19 @@ HOOK = Path(__file__).resolve().parent / "land-once-guard.py"
 def checkout(slug: str) -> str:
     root = Path(tempfile.mkdtemp(prefix="land-once-"))
     (root / ".git").mkdir()
-    (root / ".git" / "config").write_text(f'[remote "origin"]\n\turl = https://github.com/{slug}.git\n')
+    (root / ".git" / "config").write_text(
+        f'[remote "origin"]\n\turl = https://github.com/{slug}.git\n'
+    )
     return str(root)
 
 
 def run(event: dict) -> int:
-    return subprocess.run([sys.executable, str(HOOK)], input=json.dumps(event), capture_output=True, text=True).returncode
+    return subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps(event),
+        capture_output=True,
+        text=True,
+    ).returncode
 
 
 def bash(command: str, cwd: str | None = None) -> dict:
@@ -29,11 +36,35 @@ class LandOnceGuard(unittest.TestCase):
     def test_blocks(self):
         web = checkout("ZGTR/foundry-webapps")
         for event in (
-            {"tool_name": "mcp__github__create_pull_request", "tool_input": {"owner": "ZGTR", "repo": "foundry-webapps", "base": "main"}},
-            {"tool_name": "mcp__github__update_pull_request", "tool_input": {"owner": "developeralphazed", "repo": "alphazed-database", "base": "master"}},
-            {"tool_name": "mcp__github__push_files", "tool_input": {"owner": "ZGTR", "repo": "foundry-mobileapps", "branch": "main"}},
+            {
+                "tool_name": "mcp__github__create_pull_request",
+                "tool_input": {
+                    "owner": "ZGTR",
+                    "repo": "foundry-webapps",
+                    "base": "main",
+                },
+            },
+            {
+                "tool_name": "mcp__github__update_pull_request",
+                "tool_input": {
+                    "owner": "developeralphazed",
+                    "repo": "alphazed-database",
+                    "base": "master",
+                },
+            },
+            {
+                "tool_name": "mcp__github__push_files",
+                "tool_input": {
+                    "owner": "ZGTR",
+                    "repo": "foundry-mobileapps",
+                    "branch": "main",
+                },
+            },
             bash("gh pr create --base main --fill", web),
-            bash("gh pr create -R ZGTR/foundry-rag -B main --fill", checkout("ZGTR/foundry-memory")),
+            bash(
+                "gh pr create -R ZGTR/foundry-rag -B main --fill",
+                checkout("ZGTR/foundry-memory"),
+            ),
             bash("git push origin HEAD:main", web),
             bash("git push origin main", web),
         ):
@@ -42,8 +73,22 @@ class LandOnceGuard(unittest.TestCase):
     def test_allows(self):
         web = checkout("ZGTR/foundry-webapps")
         for event in (
-            {"tool_name": "mcp__github__create_pull_request", "tool_input": {"owner": "ZGTR", "repo": "foundry-webapps", "base": "develop"}},
-            {"tool_name": "mcp__github__create_pull_request", "tool_input": {"owner": "ZGTR", "repo": "not-in-the-map", "base": "main"}},
+            {
+                "tool_name": "mcp__github__create_pull_request",
+                "tool_input": {
+                    "owner": "ZGTR",
+                    "repo": "foundry-webapps",
+                    "base": "develop",
+                },
+            },
+            {
+                "tool_name": "mcp__github__create_pull_request",
+                "tool_input": {
+                    "owner": "ZGTR",
+                    "repo": "not-in-the-map",
+                    "base": "main",
+                },
+            },
             bash("gh pr create --base develop --fill", web),
             bash("git push -u origin claude/x", web),
             bash("bash scripts/promote.sh --apply", web),
@@ -55,7 +100,12 @@ class LandOnceGuard(unittest.TestCase):
 
     def test_malformed_events_fail_open(self):
         for bad in (b"nope", b'"x"', b"[1]"):
-            self.assertEqual(subprocess.run([sys.executable, str(HOOK)], input=bad, capture_output=True).returncode, 0)
+            self.assertEqual(
+                subprocess.run(
+                    [sys.executable, str(HOOK)], input=bad, capture_output=True
+                ).returncode,
+                0,
+            )
 
 
 if __name__ == "__main__":
